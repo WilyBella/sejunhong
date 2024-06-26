@@ -1,0 +1,99 @@
+#include <Windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+
+
+void setting() {
+	system("title  메크로");
+	system("mode con:cols=50 lines=25");
+
+	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_CURSOR_INFO ConsoleCursor;
+	ConsoleCursor.dwSize = 1;
+	ConsoleCursor.bVisible = 0; //커서 숨김
+	SetConsoleCursorInfo(consoleHandle, &ConsoleCursor);
+}
+
+int key_down(){
+    if(_kbhit()!=0){
+        return  _getch();
+    }else{
+        return 0;
+    }
+}
+
+int main()
+{
+     setting();
+
+     POINT a;
+     HWND hWnd;
+     int width=0;
+     RECT window_size;
+
+     a.x=0;
+     a.y=0;
+
+    int cnt=0;
+    int R_x[1000];
+    int R_y[1000];
+
+     while(1)
+     {
+
+        printf("메뉴\n");
+        printf("1: 실행\n");
+        printf("2: 등록\n");
+        printf("3: 삭제\n");
+        printf("4: 종료\n");
+
+        int n;
+        scanf("%d",&n);
+
+
+        if(n==1){
+            while(1){
+                int key = key_down();
+                if(key=='s'){
+                    break;
+                }
+                for(int i=0;i<cnt;i++){
+                    SetCursorPos(R_x[i], R_y[i]);
+                    mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);
+                    mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);
+                    Sleep(10);
+                }
+            }
+        }else if(n==2){
+            while(1){
+                int key = key_down();
+
+                if(key=='s'){
+                    break;
+                }
+                if(key=='t'){
+                    GetCursorPos(&a);
+                    R_x[cnt]=a.x;
+                    R_y[cnt]=a.y;
+                    cnt++;
+                    Sleep(100);
+                }
+            }
+            printf("키 입력 끝");
+            Sleep(1000);
+        }else if(n==3){
+            cnt=0;
+        }else if(n==4){
+            printf("프로그램 종료");
+            break;
+        }else{
+            printf("잘못된 명령");
+            Sleep(1000);
+        }
+        //printf("Y point = %d, X point = %d\n\r", a.y, a.x);
+
+        system("cls");
+      }
+
+}
