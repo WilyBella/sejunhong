@@ -1,0 +1,134 @@
+library(ggplot2)
+
+getwd() 
+
+gender <- read.csv("성별.csv")
+school <- read.csv("학력.csv")
+earn <- read.csv("임금.csv")
+age <- read.csv("연령.csv")
+industry <- read.csv("산업별.csv")
+ratio <- read.csv("비율.csv")
+
+national <- ratio[ratio$행정구역별 == "전국", ]
+national$X2022.1 <- as.numeric(national$X2022.1)
+national$X2022.2 <- as.numeric(national$X2022.2)
+
+ratio_data <- data.frame(
+  WorkerType = c("비정규직근로자", "임금근로자"),
+  Ratio = c(national$X2022.1, national$X2022.2),
+  Label = paste0(round(c(national$X2022.1, national$X2022.2) / sum(c(national$X2022.1, national$X2022.2)) * 100, 1), "%")
+)
+
+ggplot(ratio_data, aes(x = "", y = Ratio, fill = WorkerType)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  labs(title = "전국 비정규직/임금근로자 비율",
+       x = NULL,
+       y = NULL) +
+  geom_text(aes(label = Label), position = position_stack(vjust = 0.5), size = 4) +
+  theme_void() +
+  theme(legend.position = "right")
+
+
+rm<- subset(gender, 고용형태 == "정규근로자" & 성별 == "남")
+rf <- subset(gender, 고용형태 == "정규근로자" & 성별 == "여")
+nm <- subset(gender, 고용형태 == "비정규근로자" & 성별 == "남")
+nf <- subset(gender, 고용형태 == "비정규근로자" & 성별 == "여")
+
+result <- data.frame(
+  "고용형태" = c("정규근로자", "정규근로자", "비정규근로자", "비정규근로자"),
+  "성별" = c("남", "여", "남", "여"),
+  "임금총액" = c(as.numeric(rm$X2022.7), as.numeric(rf$X2022.7),
+             as.numeric(nm$X2022.7), as.numeric(nf$X2022.7))
+)
+
+ggplot(result, aes(x = 고용형태, y = 임금총액, fill = interaction(고용형태, 성별))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "임금총액 비율",
+       fill = "조합",
+       x = "고용형태",
+       y = "임금총액") +
+  geom_text(aes(label = 임금총액), position = position_dodge(width = 1), vjust = -0.5) +
+  theme(legend.position = "bottom")
+
+regular_graduate_salary <- school[school$고용형태 == "정규근로자" & school$학력 == "대학원졸", "X2022.7"]
+regular_undergraduate_salary <- school[school$고용형태 == "정규근로자" & school$학력 == "대졸", "X2022.7"]
+regular_college_salary <- school[school$고용형태 == "정규근로자" & school$학력 == "초대졸", "X2022.7"]
+regular_highschool_salary <- school[school$고용형태 == "정규근로자" & school$학력 == "고졸", "X2022.7"]
+regular_loweducation_salary <- school[school$고용형태 == "정규근로자" & school$학력 == "중졸이하", "X2022.7"]
+nonregular_graduate_salary <- school[school$고용형태 == "비정규근로자" & school$학력 == "대학원졸", "X2022.7"]
+nonregular_undergraduate_salary <- school[school$고용형태 == "비정규근로자" & school$학력 == "대졸", "X2022.7"]
+nonregular_college_salary <- school[school$고용형태 == "비정규근로자" & school$학력 == "초대졸", "X2022.7"]
+nonregular_highschool_salary <- school[school$고용형태 == "비정규근로자" & school$학력 == "고졸", "X2022.7"]
+nonregular_loweducation_salary <- school[school$고용형태 == "비정규근로자" & school$학력 == "중졸이하", "X2022.7"]
+
+sresult <- data.frame(
+  고용형태 = c(rep("정규근로자", 5), rep("비정규근로자", 5)),
+  학력 = c("대학원졸", "대졸", "초대졸", "고졸", "중졸이하", "대학원졸", "대졸", "초대졸", "고졸", "중졸이하"),
+  임금총액 = c(
+    regular_graduate_salary,
+    regular_undergraduate_salary,
+    regular_college_salary,
+    regular_highschool_salary,
+    regular_loweducation_salary,
+    nonregular_graduate_salary,
+    nonregular_undergraduate_salary,
+    nonregular_college_salary,
+    nonregular_highschool_salary,
+    nonregular_loweducation_salary
+  )
+)
+sresult$임금총액 <- as.numeric(sresult$임금총액)
+
+ggplot(sresult, aes(x = 학력, y = 임금총액, color = 고용형태)) +
+  geom_point(size = 3) +
+  labs(title = "학력 수준에 따른 임금총액 비교",
+       x = "학력",
+       y = "임금총액") +
+  theme_minimal()
+
+industry_data <- industry[2:21, c("산업분류별", "X2022.13")]
+industry_data$X2022.13 <- as.numeric(industry_data$X2022.13)
+industry_data <- na.omit(industry_data)
+industry_data$비율 <- industry_data$X2022.13 / sum(industry_data$X2022.13) * 100
+industry_data <- industry_data[-1, ]
+
+ggplot(industry_data, aes(x = 산업분류별, y = 비율, fill = 산업분류별)) +
+  geom_bar(stat = "identity", width = 0.8, position = "dodge") +
+  labs(title = "산업분류별 근로자수 비교",
+       x = "", y = "비율 (%)",
+       fill = "산업분류") +
+  geom_text(aes(label = paste0(round(비율, 1), "%")), position = position_dodge(width = 0.8), vjust = -0.5) +
+  theme_minimal() +
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1))
+
+industry_data <- industry[2:21, c("산업분류별", "X2022.7")]
+industry_data$X2022.7 <- as.numeric(industry_data$X2022.7)
+industry_data <- na.omit(industry_data)
+industry_data <- industry_data[-1, ]
+
+ggplot(industry_data, aes(x = 산업분류별, y = X2022.7, fill = 산업분류별)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  labs(title = "산업분류별 월임금총액 비교 (백분율)",
+       x = NULL, y = "백분율 (%)",
+       fill = "산업분류") +
+  geom_text(aes(label = paste0(round(X2022.7, 2), "천원")), position = position_stack(vjust = 0.5)) +
+  theme_minimal() +
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1))
+
+df <- subset(age, 고용형태 == "전체근로자")
+df <- df[-1, ]
+
+df$X2022.7 <- as.numeric(df$X2022.7)
+df$비율 <- df$X2022.7 / sum(df$X2022.7) * 100
+df$비율 <- round(df$비율, 1)
+
+ggplot(df, aes(x = "", y = 비율, fill = 연령)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(title = "연령대별 월임금총액 비율",
+       fill = "연령대", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom") + 
+  geom_text(aes(label = paste0(비율, "%")), 
+            position = position_stack(vjust = 0.5)) 
